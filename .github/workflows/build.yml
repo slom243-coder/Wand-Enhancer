@@ -47,6 +47,21 @@ jobs:
           path: WandEnhancer/bin/Release/WandEnhancer.exe
           if-no-files-found: error
 
+      - name: Install RAR archiver
+        shell: pwsh
+        run: choco install winrar --yes --no-progress
+
+      - name: Package Windows patcher with Toolbox
+        shell: pwsh
+        run: ./scripts/package-release.ps1
+
+      - name: Upload complete RAR
+        uses: actions/upload-artifact@v6
+        with:
+          name: WandEnhancer-Toolbox-RAR
+          path: .out/WandEnhancer-Toolbox.rar
+          if-no-files-found: error
+
       # The published artifact is always the offline build; this only proves the
       # opt-in variant still compiles and passes its checks on every push.
       - name: Verify opt-in update notifications build

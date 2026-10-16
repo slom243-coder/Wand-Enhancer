@@ -1,0 +1,153 @@
+:root {
+    color-scheme: dark;
+    font:
+        14px system-ui,
+        sans-serif;
+    --accent: #8b7bff;
+    background: #14151c;
+    color: #eef0fa;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+}
+.toolbox {
+    max-width: 1100px;
+    margin: auto;
+}
+header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #424558;
+}
+h1 {
+    font-size: 1.4rem;
+    margin: 0;
+}
+h2 {
+    font-size: 1.1rem;
+}
+p {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+nav {
+    display: flex;
+    padding: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+main {
+    padding: 16px;
+}
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    border: 1px solid #656b83;
+    color: inherit;
+    background: #232633;
+    border-radius: 7px;
+    padding: 9px;
+    max-width: 100%;
+}
+button {
+    cursor: pointer;
+    margin: 3px;
+}
+button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+button[aria-pressed="true"] {
+    background: var(--accent);
+    color: #08090e;
+}
+a {
+    color: #c2baff;
+}
+:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+section {
+    padding: 16px;
+    border: 1px solid #424558;
+    border-radius: 10px;
+    margin: 12px 0;
+}
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 12px 0;
+}
+.field input[type="checkbox"] {
+    align-self: flex-start;
+    width: 22px;
+    height: 22px;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+.banner,
+[role="alert"] {
+    padding: 12px;
+    background: #3e304b;
+    margin: 10px;
+    border-radius: 7px;
+}
+.compact section,
+.compact main,
+.compact header {
+    padding: 9px;
+}
+.compact .field {
+    margin: 8px 0;
+}
+.contrast {
+    background: #000;
+    color: #fff;
+}
+.contrast input,
+.contrast button,
+.contrast select,
+.contrast textarea {
+    border-color: #fff;
+    background: #000;
+}
+.still *,
+.still *::before,
+.still *::after {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+}
+.large-controls button,
+.large-controls select,
+.large-controls input {
+    min-height: 48px;
+}
+@media (max-width: 550px) {
+    header {
+        align-items: flex-start;
+    }
+    main {
+        padding: 10px;
+    }
+    nav button {
+        flex: 1 1 140px;
+    }
+}
+
+main {
+    max-height: calc(100vh - 190px);
+    overflow: auto;
+}

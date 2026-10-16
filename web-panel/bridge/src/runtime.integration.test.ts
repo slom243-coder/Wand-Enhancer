@@ -43,6 +43,101 @@ describe('production bridge runtime', () => {
         }
     });
 
+    it('rejects remote writes in host read-only mode but still streams snapshots', async () => {
+        const bridge = require('../../dist/bridge.cjs');
+        const port = await getFreePort();
+        const runtime = bridge.createBridgeRuntime({
+            host: '127.0.0.1',
+            port,
+            maxPort: port,
+            readOnly: true,
+        });
+        const writes: unknown[] = [];
+        runtime.sync(rawTrainerSnapshot());
+        runtime.setHandler((request: unknown) => {
+            writes.push(request);
+            return true;
+        });
+        runtime.setCommandHandler((request: unknown) => {
+            writes.push(request);
+            return { ok: true };
+        });
+        await waitUntil(() => runtime.listening);
+        const socket = new NodeWebSocket(`ws://127.0.0.1:${port}/remote/ws`);
+        try {
+            await waitUntil(() => runtime.listening);
+            const messages = await new Promise<any[]>((resolve, reject) => {
+                const all: any[] = [];
+                const timeout = setTimeout(
+                    () => reject(new Error('Read-only test timed out')),
+                    3000,
+                );
+                socket.once('error', reject);
+                socket.once('open', () =>
+                    socket.send(
+                        JSON.stringify({
+                            type: 'hello',
+                            version: 1,
+                            requestId: 'hello',
+                            payload: {
+                                client: 'mobile-web',
+                                clientVersion: 'test',
+                                capabilities: {
+                                    supportsDeltaValues: true,
+                                    supportsTrainerSwitch: true,
+                                },
+                            },
+                        }),
+                    ),
+                );
+                socket.on('message', (raw) => {
+                    const message = JSON.parse(String(raw));
+                    all.push(message);
+                    if (message.type === 'trainer_meta') {
+                        socket.send(
+                            JSON.stringify({
+                                type: 'set_value',
+                                version: 1,
+                                requestId: 'set',
+                                payload: {
+                                    trainerId: message.payload.trainer.trainerId,
+                                    target: 'god',
+                                    value: false,
+                                },
+                            }),
+                        );
+                        socket.send(
+                            JSON.stringify({
+                                type: 'remote_command',
+                                version: 1,
+                                requestId: 'stop',
+                                payload: { action: 'stop' },
+                            }),
+                        );
+                    }
+                    if (all.filter((m) => m.type === 'error').length === 2) {
+                        clearTimeout(timeout);
+                        resolve(all);
+                    }
+                });
+            });
+            expect(messages.filter((m) => m.type === 'error').map((m) => m.payload.code)).toEqual([
+                'read_only',
+                'read_only',
+            ]);
+            expect(messages.some((m) => m.type === 'trainer_values')).toBe(true);
+            expect(writes).toEqual([]);
+            const health = (await (
+                await fetch(`http://127.0.0.1:${port}/remote/api/health`)
+            ).json()) as { readOnly: boolean; connectedClients: number };
+            expect(health.readOnly).toBe(true);
+            expect(health.connectedClients).toBe(1);
+        } finally {
+            socket.close();
+            runtime.close();
+        }
+    });
+
     it('rejects a browser WebSocket from a different origin', async () => {
         const bridge = require('../../dist/bridge.cjs');
         const port = await getFreePort();

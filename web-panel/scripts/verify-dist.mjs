@@ -11,6 +11,8 @@ const distDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..',
 const REQUIRED_FILES = [
     'bridge.cjs',
     'index.html',
+    'toolbox.html',
+    path.join('renderer-scripts', 'productivity-tools.js'),
     path.join('renderer-scripts', 'remote-popup-cleanup.js'),
 ];
 

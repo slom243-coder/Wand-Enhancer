@@ -33,6 +33,12 @@ export default defineConfig({
     },
     build: {
         outDir: 'dist',
+        rollupOptions: {
+            input: {
+                main: fileURLToPath(new URL('./index.html', import.meta.url)),
+                toolbox: fileURLToPath(new URL('./toolbox.html', import.meta.url)),
+            },
+        },
         assetsDir: 'assets',
         target: 'es2020',
         sourcemap: false,

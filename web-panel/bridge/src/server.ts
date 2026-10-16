@@ -76,6 +76,7 @@ function createBridgeServer(options: BridgeOptions = {}) {
     const host = options.host || process.env.WAND_REMOTE_HOST || DEFAULT_REMOTE_HOST;
     const panelRoot = options.panelRoot || path.dirname(__dirname);
     const clients = new Set<BridgeClient>();
+    const readOnly = options.readOnly === true || process.env.WAND_REMOTE_READ_ONLY === '1';
     const log = createBridgeLogger(options);
     let advertisedUrls: string[] = [];
     let setValueHandler: SetValueHandler | null = null;
@@ -135,7 +136,13 @@ function createBridgeServer(options: BridgeOptions = {}) {
 
         if (url.pathname === REMOTE_HEALTH_PATH) {
             response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-            response.end(JSON.stringify(bridgeState.buildHealthPayload()));
+            response.end(
+                JSON.stringify({
+                    ...bridgeState.buildHealthPayload(),
+                    readOnly,
+                    connectedClients: clients.size,
+                }),
+            );
             return;
         }
 
@@ -317,6 +324,16 @@ function createBridgeServer(options: BridgeOptions = {}) {
                 message.requestId ?? null,
             );
             bridgeState.sendSnapshot(client);
+            return;
+        }
+
+        if (readOnly && (message?.type === 'remote_command' || message?.type === 'set_value')) {
+            sendJson(
+                client,
+                'error',
+                { code: 'read_only', message: 'Remote control is disabled by the desktop host.' },
+                message.requestId ?? null,
+            );
             return;
         }
 
